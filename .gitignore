@@ -1,24 +1,22 @@
-﻿# Node
-node_modules/
-.npm/.pnpm-store/.next/.out/
-dist/
-build/
-
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
+﻿# Python
 .venv/
-venv/.env
-.python-version
+.env*
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+coverage.xml
 
-# OS
+# Node/Next.js (web)
+apps/web/node_modules/
+apps/web/.next/
+apps/web/.turbo/
+
+# OS/Editor
 .DS_Store
 Thumbs.db
-
-# IDE/Editor
-.vscode/
 .idea/
+.vscode/
 
 # Logs
 *.log
@@ -27,4 +25,7 @@ logs/
 # Misc
 *.local
 coverage/
+node_modules/
+dist/
+build/
 

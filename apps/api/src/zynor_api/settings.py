@@ -1,14 +1,15 @@
 from functools import lru_cache
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
+    
     app_name: str = "Zynor API"
     environment: str = "development"
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
 
 @lru_cache
