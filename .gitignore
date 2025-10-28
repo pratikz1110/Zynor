@@ -1,0 +1,30 @@
+﻿# Node
+node_modules/
+.npm/.pnpm-store/.next/.out/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/.env
+.python-version
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE/Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Misc
+*.local
+coverage/
+
