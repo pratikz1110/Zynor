@@ -1,4 +1,4 @@
-import { HealthBadge } from '../components/health-badge'
+import HealthBadge from "@/components/health-badge"
 
 export default function Page() {
   return (

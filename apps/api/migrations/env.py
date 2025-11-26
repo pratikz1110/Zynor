@@ -1,26 +1,36 @@
 from __future__ import annotations
 
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[2] / "src"))
+import os, sys
 
-import os
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from logging.config import fileConfig
 
 from sqlalchemy import create_engine, pool
 from alembic import context
 
-# Load env file for DATABASE_URL
-from dotenv import load_dotenv
-load_dotenv(".env")  # you chose .env in db.py
-
 # Import your Base for autogenerate
-from zynor_api.db import Base  # Base.metadata is our target
+from src.zynor_api.db import Base
+from src.zynor_api import models  # noqa: F401
 
-# Ensure models are imported so they’re registered on Base.metadata
-import zynor_api.models
+from src.zynor_api.settings import get_settings
+settings = get_settings()
 
 # this is the Alembic Config object, which provides access to values within the .ini file.
 config = context.config
+
+# Prefer env var, then try both attribute casings on the settings object
+db_url = (
+    os.getenv("DATABASE_URL")
+    or getattr(settings, "DATABASE_URL", None)
+    or getattr(settings, "database_url", None)
+)
+if db_url:
+    context.config.set_main_option("sqlalchemy.url", db_url)
+else:
+    raise RuntimeError("DATABASE_URL not found for Alembic (env var or settings).")
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -29,9 +39,13 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 def get_database_url() -> str:
-    url = os.getenv("DATABASE_URL")
+    url = (
+        os.getenv("DATABASE_URL")
+        or getattr(settings, "DATABASE_URL", None)
+        or getattr(settings, "database_url", None)
+    )
     if not url:
-        raise RuntimeError("DATABASE_URL not set; ensure apps/api/.env exists")
+        raise RuntimeError("DATABASE_URL not found for Alembic (env var or settings).")
     return url
 
 def run_migrations_offline() -> None:

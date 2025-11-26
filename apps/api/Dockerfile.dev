@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+# Install system packages needed for Python + PostgreSQL client libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements for the API from the apps/api folder (build context will be repo root)
+COPY apps/api/requirements.txt .
+COPY apps/api/requirements-dev.txt .
+
+# Install dependencies (base + dev)
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-dev.txt
+
+# Copy the entire repo (so we preserve the `apps.api.src.zynor_api.main:app` import path)
+COPY . /app
+
+# Expose FastAPI port
+EXPOSE 8000
+
+# Development command: auto-reload on code changes
+CMD ["uvicorn", "apps.api.src.zynor_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+

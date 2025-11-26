@@ -1,0 +1,79 @@
+# Python cache / compiled files
+
+__pycache__/
+
+*.py[cod]
+
+*.pyo
+
+*.pyd
+
+.pytest_cache/
+
+
+
+# Virtual environments
+
+.venv/
+
+env/
+
+venv/
+
+
+
+# Git metadata
+
+.git/
+
+.gitignore
+
+
+
+# Environment / secrets
+
+.env
+
+.env.*
+
+*.pem
+
+*.key
+
+
+
+# Editor / IDE
+
+.vscode/
+
+.idea/
+
+
+
+# Build / dist / coverage
+
+dist/
+
+build/
+
+htmlcov/
+
+.coverage
+
+.mypy_cache/
+
+*.egg-info/
+
+
+
+# Logs & misc
+
+*.log
+
+*.sqlite3
+
+*.db
+
+.DS_Store
+
+

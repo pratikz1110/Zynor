@@ -1,33 +1,46 @@
-"use client"
+"use client";
 
-import { useQuery } from '@tanstack/react-query'
-import { Badge } from './ui/badge'
-import { getApiUrl } from '../lib/utils'
+import { useEffect, useState } from "react";
 
-type HealthResponse = { status: string }
+export default function HealthBadge() {
+  const [status, setStatus] = useState<"checking" | "up" | "down">("checking");
 
-export function HealthBadge() {
-  const apiUrl = getApiUrl()
-  const { data, isError } = useQuery<HealthResponse>({
-    queryKey: ['health'],
-    queryFn: async () => {
-      const res = await fetch(`${apiUrl}/health`, { cache: 'no-store' })
-      if (!res.ok) throw new Error('Health check failed')
-      return (await res.json()) as HealthResponse
-    },
-    staleTime: 15_000,
-    retry: 0
-  })
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL;
+    let cancelled = false;
 
-  if (isError) {
-    return <Badge variant="outline">API: Down</Badge>
-  }
+    async function ping() {
+      try {
+        const res = await fetch(`${API}/health`, { cache: "no-store" });
+        if (!cancelled) setStatus(res.ok ? "up" : "down");
+      } catch {
+        if (!cancelled) setStatus("down");
+      }
+    }
 
-  if (data?.status === 'ok') {
-    return <Badge variant="success">API: OK</Badge>
-  }
+    ping();
+    const id = setInterval(ping, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
-  return <Badge variant="outline">API: ...</Badge>
+  const label =
+    status === "checking" ? "Checking…" : status === "up" ? "Up" : "Down";
+
+  return (
+    <span
+      className={`rounded-md px-2 py-1 text-xs border ${
+        status === "up"
+          ? "border-green-300 bg-green-50 text-green-700"
+          : status === "down"
+          ? "border-red-300 bg-red-50 text-red-700"
+          : "border-gray-300 bg-gray-50 text-gray-700"
+      }`}
+      title="API health"
+    >
+      API: {label}
+    </span>
+  );
 }
-
-
