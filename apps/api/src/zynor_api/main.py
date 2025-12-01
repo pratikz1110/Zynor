@@ -47,11 +47,6 @@ def root():
     return {"name": settings.app_name, "environment": settings.environment}
 
 
-@app.get("/health", tags=["meta"])
-def health():
-    return {"status": "ok"}
-
-
 @app.get("/version", tags=["meta"])
 def version():
     return {"version": __version__}
@@ -60,3 +55,8 @@ def version():
 @app.get("/_crash")
 def force_crash():
     raise ValueError("boom")
+
+
+@app.get("/health", tags=["meta"])
+def health():
+    return {"status": "ok"}
