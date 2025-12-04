@@ -27,7 +27,7 @@ RUN pip install --upgrade pip \
 
 # Copy only the API source and migrations into the build context
 COPY apps/api/src ./apps/api/src
-COPY apps/api/migrations ./apps/api/migrations || true
+COPY apps/api/migrations ./apps/api/migrations
 COPY apps/core ./apps/core
 
 ############################
