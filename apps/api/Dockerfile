@@ -1,44 +1,71 @@
-# ============================
-# Stage 1 — Build environment
-# ============================
+# syntax=docker/dockerfile:1
+
+############################
+# Stage 1 – Builder
+############################
 FROM python:3.11-slim AS builder
 
-# Install system packages needed for building Python deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
+WORKDIR /app
+
+# Python runtime settings
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install build tools & headers for compiled deps (psycopg, etc.)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements from the API folder (build context is repo root)
+COPY apps/api/requirements.txt ./requirements.txt
+
+# Install Python deps into a separate prefix so we can copy them cleanly
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install -r requirements.txt
+
+# Copy only the API source and migrations into the build context
+COPY apps/api/src ./apps/api/src
+COPY apps/api/migrations ./apps/api/migrations || true
+COPY apps/core ./apps/core
+
+############################
+# Stage 2 – Runtime
+############################
+FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
-# Copy requirements from the apps/api folder (build context will be repo root)
-COPY apps/api/requirements.txt .
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Install Python dependencies (wheels will be built here)
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-
-# ============================
-# Stage 2 — Runtime environment
-# ============================
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install minimal runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
+# Minimal system deps needed at runtime (keep close to what you had)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed dependencies from builder stage
-COPY --from=builder /usr/local/lib/python3.11 /usr/local/lib/python3.11
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Create non-root user for security
+RUN useradd -m appuser
 
-# Copy the entire repo into /app so the path apps.api.src.zynor_api.main:app works
-COPY . /app
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local
 
-# Expose FastAPI port
+# Copy application code from builder (same layout as in repo)
+COPY --from=builder /app/apps/api/src ./apps/api/src
+COPY --from=builder /app/apps/api/migrations ./apps/api/migrations
+COPY --from=builder /app/apps/core ./apps/core
+
+# Ensure Python can import from the repo-style layout (apps.api.src...)
+ENV PYTHONPATH=/app
+
+# Expose FastAPI/Gunicorn port
 EXPOSE 8000
 
-# Run the API with Gunicorn + Uvicorn worker in production mode
-CMD ["gunicorn", "apps.api.src.zynor_api.main:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "2"]
+# Run as non-root
+USER appuser
 
+# Run the API with Gunicorn + Uvicorn worker in production mode
+# This matches your existing entrypoint path
+CMD ["gunicorn", "apps.api.src.zynor_api.main:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "--workers", "2"]
