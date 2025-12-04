@@ -18,6 +18,14 @@ for p in _CANDIDATES:
         # don't crash on load errors; we'll validate below
         pass
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL or not DATABASE_URL.strip():
+    raise RuntimeError(
+        "DATABASE_URL is not set. Create apps/api/.env with e.g.\n"
+        "DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/zynor_dev"
+    )
+
 
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -27,7 +35,6 @@ class AppSettings(BaseSettings):
     
     app_name: str = "Zynor API"
     environment: str = "development"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./zynor_ci.db"
 
 
 @lru_cache

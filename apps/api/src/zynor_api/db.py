@@ -9,10 +9,13 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
-from . import settings
+from .settings import DATABASE_URL
+
+
 
 # SQLAlchemy 2.0 style engine/session
-engine = create_engine(settings.DATABASE_URL, future=True)
+engine = create_engine(DATABASE_URL, future=True)
+
 
 SessionLocal = sessionmaker(
     bind=engine,
