@@ -60,6 +60,9 @@ COPY --from=builder /app/apps/core ./apps/core
 # Ensure Python can import from the repo-style layout (apps.api.src...)
 ENV PYTHONPATH=/app
 
+# Create logs directory and give ownership to appuser
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+
 # Expose FastAPI/Gunicorn port
 EXPOSE 8000
 
