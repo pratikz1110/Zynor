@@ -16,8 +16,19 @@ pipeline {
             }
         }
 
-        stage('Run API Tests') {
+        stage('Build API Docker Image') {
+            steps {
+                script {
+                    def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
+                    echo "Building Docker image: ${IMAGE}"
+                    sh """
+                      docker build -t ${IMAGE} -f apps/api/Dockerfile apps/api
+                    """
+                }
+            }
+        }
 
+        stage('Run API Tests') {
             steps {
                 script {
                     def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
@@ -30,6 +41,26 @@ pipeline {
                             --env-file $API_ENV_FILE \\
                             ${IMAGE} \\
                             sh -c "pip install pytest && pytest apps/api/tests -q"
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('API Health Check') {
+            steps {
+                script {
+                    def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
+                    def CONTAINER = "zynor-api-healthcheck-${env.BUILD_NUMBER}"
+                    withCredentials([file(credentialsId: 'zynor-api-env-file', variable: 'API_ENV_FILE')]) {
+                        sh """
+                          echo "Running health check..."
+                          docker run --rm --name ${CONTAINER} \\
+                            --env-file $API_ENV_FILE \\
+                            -d ${IMAGE}
+                          sleep 5
+                          docker exec ${CONTAINER} curl -f http://localhost:8000/health || exit 1
+                          docker stop ${CONTAINER}
                         """
                     }
                 }
