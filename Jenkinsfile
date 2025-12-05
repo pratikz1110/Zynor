@@ -38,9 +38,9 @@ pipeline {
                         sh """
                           echo "Running API tests in container..."
                           docker run --rm --name ${CONTAINER} \\
-                            --env-file $API_ENV_FILE \\
+                            --env-file "\$API_ENV_FILE" \\
                             ${IMAGE} \\
-                            sh -c "pip install pytest && pytest apps/api/tests -q"
+                            sh -c 'pip install --user pytest && python -m pytest apps/api/tests -q'
                         """
                     }
                 }
