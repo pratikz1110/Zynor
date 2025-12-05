@@ -22,7 +22,7 @@ pipeline {
                     def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
                     echo "Building Docker image: ${IMAGE}"
                     sh """
-                      docker build -t ${IMAGE} -f apps/api/Dockerfile apps/api
+                      docker build -t ${IMAGE} -f apps/api/Dockerfile .
                     """
                 }
             }
