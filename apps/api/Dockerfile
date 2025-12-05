@@ -56,6 +56,7 @@ COPY --from=builder /install /usr/local
 COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/apps/api/migrations ./apps/api/migrations
 COPY --from=builder /app/apps/core ./apps/core
+COPY apps/api/tests ./apps/api/tests
 
 # Ensure Python can import from the repo-style layout (apps.api.src...)
 ENV PYTHONPATH=/app
