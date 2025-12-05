@@ -40,7 +40,7 @@ pipeline {
                           docker run --rm --name ${CONTAINER} \\
                             --env-file "\$API_ENV_FILE" \\
                             ${IMAGE} \\
-                            sh -c 'pip install --user pytest && python -m pytest apps/api/tests -q'
+                            sh -c 'pip install --user pytest && PYTHONPATH=/app/apps/api/src python -m pytest apps/api/tests -q'
                         """
                     }
                 }
