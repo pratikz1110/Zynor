@@ -1,7 +1,7 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, func, Integer, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, func, Integer, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from ..db import Base
 
 
@@ -13,7 +13,7 @@ class Technician(Base):
     last_name = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     phone = Column(String(20), nullable=True)
-    skills = Column(JSONB, nullable=True)
+    skills = Column(JSON, nullable=True)
     is_active = Column(Boolean, nullable=True, default=True)
     created_by_user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)
     updated_by_user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)
