@@ -16,13 +16,13 @@ if PROJECT_ROOT not in sys.path:
 # Import app + DB base / dependency
 from apps.api.src.zynor_api.main import app
 from apps.api.src.zynor_api.db import Base, get_session
-from apps.api.src.zynor_api import settings as settings_module
+from apps.api.src.zynor_api.settings import get_settings
 
 
 # ------------------------------------------------------------------
 # Test database setup (Postgres, same as dev for now)
 # ------------------------------------------------------------------
-DATABASE_URL = settings_module.DATABASE_URL
+DATABASE_URL = get_settings().database_url
 
 engine = create_engine(
     DATABASE_URL,
