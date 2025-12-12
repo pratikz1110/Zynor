@@ -39,8 +39,9 @@ pipeline {
                           echo "Running API tests in container..."
                           docker run --rm --name ${CONTAINER} \\
                             --env-file "\$API_ENV_FILE" \\
+                            -e DATABASE_URL=sqlite+pysqlite:////tmp/zynor_test.db \\
                             ${IMAGE} \\
-                            sh -c 'pip install --user pytest && PYTHONPATH=/app/apps/api/src python -m pytest apps/api/tests -q'
+                            sh -c 'pip install --user pytest pytest-asyncio && PYTHONPATH=/app/apps/api/src python -m pytest apps/api/tests -q -o cache_dir=/tmp/pytest_cache'
                         """
                     }
                 }
