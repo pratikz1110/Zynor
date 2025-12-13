@@ -20,9 +20,10 @@ from apps.api.src.zynor_api.settings import get_settings
 
 
 # ------------------------------------------------------------------
-# Test database setup (Postgres, same as dev for now)
+# Test database setup - Use SQLite for CI/testing
 # ------------------------------------------------------------------
-DATABASE_URL = get_settings().database_url
+# Override with TEST_DATABASE_URL if set, otherwise use settings
+DATABASE_URL = os.getenv("TEST_DATABASE_URL") or get_settings().database_url
 
 engine = create_engine(
     DATABASE_URL,
@@ -34,6 +35,15 @@ TestingSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
 )
+
+# Production-grade guardrail: Verify we're using SQLite in CI
+if "sqlite" not in DATABASE_URL.lower():
+    import warnings
+    warnings.warn(
+        f"⚠️  Tests should use SQLite, but got: {DATABASE_URL.split('://')[0]}. "
+        "Set DATABASE_URL=sqlite+pysqlite:///... or TEST_DATABASE_URL for CI.",
+        UserWarning
+    )
 
 
 def override_get_session():

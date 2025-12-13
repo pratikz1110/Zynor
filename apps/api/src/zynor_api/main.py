@@ -9,10 +9,18 @@ from .routers.jobs.routes import router as jobs_router
 from apps.core.logging_config import init_logging
 from apps.core.request_logging import RequestLoggingMiddleware
 from apps.core.error_handlers import unhandled_exception_handler
+import logging
 
 init_logging()
 
 settings = get_settings()
+
+# Log database driver being used (production-grade check)
+logger = logging.getLogger(__name__)
+db_url = settings.database_url
+db_driver = db_url.split("://")[0] if "://" in db_url else "unknown"
+logger.info(f"🗄️  Database driver: {db_driver} | Environment: {settings.environment}")
+
 app = FastAPI(
     title="Zynor API",
     version="0.2.0",
