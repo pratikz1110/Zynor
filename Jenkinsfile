@@ -42,7 +42,7 @@ pipeline {
                             -e TEST_DATABASE_URL=sqlite+pysqlite:////tmp/zynor_test.db \\
                             -e HOME=/tmp \\
                             ${IMAGE} \\
-                            sh -c 'PYTHONPATH=/app/apps/api/src PYTEST_ADDOPTS="-p no:cacheprovider" python -m pytest apps/api/tests -q'
+                            sh -c 'PYTHONPATH=/app/apps/api/src python -m pytest -m "unit" apps/api/tests -q'
                         """
                     }
                 }

@@ -1,6 +1,8 @@
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.unit
 def test_list_technicians_returns_200_and_items_list(client: TestClient):
     """
     Smoke test for technicians list endpoint:
