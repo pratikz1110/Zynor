@@ -40,8 +40,9 @@ pipeline {
                           docker run --rm --name ${CONTAINER} \\
                             --env-file "\$API_ENV_FILE" \\
                             -e TEST_DATABASE_URL=sqlite+pysqlite:////tmp/zynor_test.db \\
+                            -e HOME=/tmp \\
                             ${IMAGE} \\
-                            sh -c 'pip install --user pytest pytest-asyncio && PYTHONPATH=/app/apps/api/src python -m pytest apps/api/tests -v -o cache_dir=/tmp/pytest_cache'
+                            sh -c 'PYTHONPATH=/app/apps/api/src PYTEST_ADDOPTS="-p no:cacheprovider" python -m pytest apps/api/tests -q'
                         """
                     }
                 }

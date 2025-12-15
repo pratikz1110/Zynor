@@ -25,6 +25,9 @@ COPY apps/api/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip \
     && pip install --prefix=/install -r requirements.txt
 
+COPY apps/api/requirements-test.txt ./requirements-test.txt
+RUN pip install --prefix=/install -r requirements-test.txt
+
 # Copy only the API source and migrations into the build context
 COPY apps/api/src ./apps/api/src
 COPY apps/api/migrations ./apps/api/migrations
