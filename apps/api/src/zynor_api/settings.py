@@ -1,27 +1,10 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Load candidate .env files in priority order
-_CANDIDATES = [
-    Path(__file__).resolve().parents[2] / ".env",   # apps/api/.env
-    Path(__file__).resolve().parents[3] / ".env",   # repo-root/.env (optional)
-]
-
-for p in _CANDIDATES:
-    try:
-        if p.exists():
-            load_dotenv(p, override=False)
-    except Exception:
-        # don't crash on load errors; we'll validate below
-        pass
+from pydantic import field_validator, model_validator
 
 
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
         extra="ignore"
     )
     
@@ -34,14 +17,22 @@ class AppSettings(BaseSettings):
     def validate_db(cls, v):
         if not v or not v.strip():
             raise ValueError(
-                "DATABASE_URL must be set. Create apps/api/.env with e.g.\n"
-                "DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/zynor_dev"
+                "DATABASE_URL must be set. Set DATABASE_URL via environment variables (or local dev tooling)."
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_environment_database(self):
+        """Ensure production/staging environments don't use localhost databases."""
+        if self.environment in ("production", "staging"):
+            if "localhost" in self.database_url.lower():
+                raise ValueError(
+                    f"Environment '{self.environment}' cannot use localhost database. "
+                    "Use a proper database URL for production/staging deployments."
+                )
+        return self
 
 
 @lru_cache
 def get_settings() -> AppSettings:
     return AppSettings()
-
-

@@ -25,6 +25,28 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    command:
+      - bash
+      - -lc
+      - |
+        python - <<'PY'
+        import os, time
+        import psycopg
+        url = os.environ['DATABASE_URL'].replace('postgresql+psycopg://','postgresql://')
+        for i in range(60):
+            try:
+                with psycopg.connect(url) as conn:
+                    conn.execute('SELECT 1;')
+                print('DB is ready')
+                break
+            except Exception as e:
+                print(f'Waiting for DB... {i+1}/60')
+                time.sleep(1)
+        else:
+            raise SystemExit('DB did not become ready in time')
+        PY
+        alembic -c apps/api/alembic.ini upgrade head &&
+        uvicorn apps.api.src.zynor_api.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:

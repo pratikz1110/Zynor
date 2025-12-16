@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os, sys
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
@@ -12,10 +12,10 @@ from sqlalchemy import create_engine, pool
 from alembic import context
 
 # Import your Base for autogenerate
-from src.zynor_api.db import Base
-from src.zynor_api import models  # noqa: F401
+from apps.api.src.zynor_api.db import Base
+from apps.api.src.zynor_api import models  # noqa: F401
 
-from src.zynor_api.settings import get_settings
+from apps.api.src.zynor_api.settings import get_settings
 settings = get_settings()
 
 # this is the Alembic Config object, which provides access to values within the .ini file.
