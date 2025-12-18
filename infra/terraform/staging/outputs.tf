@@ -15,3 +15,12 @@ output "api_security_group_id" {
   value = aws_security_group.zynor_api.id
 }
 
+output "rds_endpoint" {
+  value       = aws_db_instance.zynor_staging.address
+  description = "RDS endpoint hostname"
+}
+
+
+
+
+

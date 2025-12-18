@@ -13,3 +13,18 @@ variable "tags" {
   }
 }
 
+variable "db_username" {
+  type        = string
+  description = "Staging RDS master username"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Staging RDS master password"
+  sensitive   = true
+}
+
+
+
+
+
