@@ -31,10 +31,9 @@ pipeline {
         stage('Build API Docker Image') {
             steps {
                 script {
-                    def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
-                    echo "Building Docker image: ${IMAGE}"
+                    echo "Building Docker image: ${env.ECR_IMAGE_URI}"
                     sh """
-                      docker build -t ${IMAGE} -f apps/api/Dockerfile .
+                      docker build -t ${env.ECR_IMAGE_URI} -f apps/api/Dockerfile .
                     """
                 }
             }
@@ -43,7 +42,6 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
                     def CONTAINER = "zynor-api-tests-${env.BUILD_NUMBER}"
                     // Reuse the same env file credential you already use for the health check
                     withCredentials([file(credentialsId: 'zynor-api-env-file', variable: 'API_ENV_FILE')]) {
@@ -53,7 +51,7 @@ pipeline {
                             --env-file "\$API_ENV_FILE" \\
                             -e TEST_DATABASE_URL=sqlite+pysqlite:////tmp/zynor_test.db \\
                             -e HOME=/tmp \\
-                            ${IMAGE} \\
+                            ${env.ECR_IMAGE_URI} \\
                             sh -c 'PYTHONPATH=/app/apps/api/src python -m pytest -m "unit" apps/api/tests -q'
                         """
                     }
@@ -64,14 +62,13 @@ pipeline {
         stage('API Health Check') {
             steps {
                 script {
-                    def IMAGE = "zynor-api-ci:${env.BUILD_NUMBER}"
                     def CONTAINER = "zynor-api-healthcheck-${env.BUILD_NUMBER}"
                     withCredentials([file(credentialsId: 'zynor-api-env-file', variable: 'API_ENV_FILE')]) {
                         sh """
                           echo "Running health check..."
                           docker run --rm --name ${CONTAINER} \\
                             --env-file $API_ENV_FILE \\
-                            -d ${IMAGE}
+                            -d ${env.ECR_IMAGE_URI}
                           sleep 5
                           docker exec ${CONTAINER} curl -f http://localhost:8000/health || exit 1
                           docker stop ${CONTAINER}
