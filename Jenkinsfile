@@ -16,6 +16,18 @@ pipeline {
             }
         }
 
+        stage('Prep: Git SHA + Image URI') {
+            steps {
+                script {
+                    def sha = sh(script: 'git rev-parse --short=12 HEAD', returnStdout: true).trim()
+                    env.GIT_SHA = sha
+                    env.ECR_IMAGE_URI = "589668342400.dkr.ecr.us-west-1.amazonaws.com/zynor-api:${sha}"
+                    echo "GIT_SHA=${env.GIT_SHA}"
+                    echo "ECR_IMAGE_URI=${env.ECR_IMAGE_URI}"
+                }
+            }
+        }
+
         stage('Build API Docker Image') {
             steps {
                 script {
@@ -70,7 +82,3 @@ pipeline {
         }
     }
 }
-
-
-
-
