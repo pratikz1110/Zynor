@@ -39,11 +39,21 @@ pipeline {
             }
         }
 
+        stage('Push Image to ECR') {
+            steps {
+                script {
+                    sh """
+                      aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 589668342400.dkr.ecr.us-west-1.amazonaws.com
+                      docker push ${env.ECR_IMAGE_URI}
+                    """
+                }
+            }
+        }
+
         stage('Run API Tests') {
             steps {
                 script {
                     def CONTAINER = "zynor-api-tests-${env.BUILD_NUMBER}"
-                    // Reuse the same env file credential you already use for the health check
                     withCredentials([file(credentialsId: 'zynor-api-env-file', variable: 'API_ENV_FILE')]) {
                         sh """
                           echo "Running API tests in container..."
