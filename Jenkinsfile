@@ -39,6 +39,16 @@ pipeline {
             }
         }
 
+        stage('AWS CLI Check') {
+            steps {
+                sh """
+                  which aws
+                  aws --version
+                  aws sts get-caller-identity
+                """
+            }
+        }
+
         stage('Push Image to ECR') {
             steps {
                 script {
