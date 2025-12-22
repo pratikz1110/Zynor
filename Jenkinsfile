@@ -41,18 +41,30 @@ pipeline {
 
         stage('AWS CLI Check') {
             steps {
-                sh """
-                  which aws
-                  aws --version
-                  aws sts get-caller-identity
-                """
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-zynor'
+                ]]) {
+                    sh """
+                      export AWS_REGION=us-west-1
+                      export AWS_DEFAULT_REGION=us-west-1
+                      which aws
+                      aws --version
+                      aws sts get-caller-identity
+                    """
+                }
             }
         }
 
         stage('Push Image to ECR') {
             steps {
-                script {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-zynor'
+                ]]) {
                     sh """
+                      export AWS_REGION=us-west-1
+                      export AWS_DEFAULT_REGION=us-west-1
                       aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 589668342400.dkr.ecr.us-west-1.amazonaws.com
                       docker push ${env.ECR_IMAGE_URI}
                     """
