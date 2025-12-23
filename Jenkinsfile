@@ -42,6 +42,8 @@ pipeline {
                 ]]) {
                     sh """
                       export AWS_REGION=us-west-1
+                      export AWS_DEFAULT_REGION=us-west-1
+
                       aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 589668342400.dkr.ecr.us-west-1.amazonaws.com
                       docker push ${env.ECR_IMAGE_URI}
                     """
@@ -56,17 +58,22 @@ pipeline {
                     credentialsId: 'aws-zynor'
                 ]]) {
                     sh """
+                      set -euo pipefail
+
                       export AWS_REGION=us-west-1
+                      export AWS_DEFAULT_REGION=us-west-1
                       export CLUSTER=zynor-staging
                       export SERVICE=zynor-api-staging
                       export FAMILY=zynor-api-staging
 
-                      # 1. Get current task definition
+                      echo "Deploying image: ${env.ECR_IMAGE_URI}"
+
+                      # 1) Get current task definition JSON
                       aws ecs describe-task-definition \
                         --task-definition \$FAMILY \
                         --query taskDefinition > taskdef.json
 
-                      # 2. Create clean registerable task definition
+                      # 2) Create clean registerable task definition with new image
                       jq '{
                         family: .family,
                         executionRoleArn: .executionRoleArn,
@@ -77,19 +84,38 @@ pipeline {
                         memory: .memory
                       }' taskdef.json > taskdef-register.json
 
-                      # 3. Register new revision
+                      # 3) Register new revision
                       NEW_TASK_DEF_ARN=\$(aws ecs register-task-definition \
                         --cli-input-json file://taskdef-register.json \
                         --query 'taskDefinition.taskDefinitionArn' \
                         --output text)
 
-                      echo "Registered: \$NEW_TASK_DEF_ARN"
+                      echo "Registered NEW task definition: \$NEW_TASK_DEF_ARN"
 
-                      # 4. Update service
+                      # 4) Update service to new task definition
                       aws ecs update-service \
                         --cluster \$CLUSTER \
                         --service \$SERVICE \
-                        --task-definition \$NEW_TASK_DEF_ARN
+                        --task-definition \$NEW_TASK_DEF_ARN > /dev/null
+
+                      echo "Waiting for ECS service to reach steady state..."
+                      aws ecs wait services-stable --cluster \$CLUSTER --services \$SERVICE
+
+                      # 5) Verify service is actually on the new task definition (detect rollback)
+                      CURRENT_TASK_DEF=\$(aws ecs describe-services \
+                        --cluster \$CLUSTER \
+                        --services \$SERVICE \
+                        --query 'services[0].taskDefinition' \
+                        --output text)
+
+                      echo "Service task definition after deploy: \$CURRENT_TASK_DEF"
+
+                      if [ "\$CURRENT_TASK_DEF" != "\$NEW_TASK_DEF_ARN" ]; then
+                        echo "ERROR: Service is NOT using the newly registered task definition. Possible rollback happened."
+                        exit 1
+                      fi
+
+                      echo "SUCCESS: Service is running the new task definition."
                     """
                 }
             }
